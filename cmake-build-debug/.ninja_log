@@ -1,0 +1,23 @@
+# ninja log v6
+3	398	1727721833840906829	third_party/CMakeFiles/imgui.dir/imgui/imgui_impl_vulkan.cpp.o	53b0fac9ed03a83c
+16	287	1727722495229219320	src/CMakeFiles/vulkan_guide.dir/main.cpp.o	a89e52a37d7012f9
+2	531	1727721833840301489	third_party/CMakeFiles/imgui.dir/imgui/imgui_draw.cpp.o	8c9ac1ebe8abc155
+3	630	1727721833840633076	third_party/CMakeFiles/imgui.dir/imgui/imgui_widgets.cpp.o	789ffb11e3045efb
+16	5396	1727722495228456353	third_party/libvkbootstrap.a	8a3bd17a43f86952
+1	638	1727721833839397313	third_party/CMakeFiles/imgui.dir/imgui/imgui.cpp.o	938092549cd9f8a3
+2	464	1727721833839515356	third_party/CMakeFiles/imgui.dir/imgui/imgui_demo.cpp.o	ce498cdac0d70d6e
+1	1237	1727721833838950391	third_party/CMakeFiles/vkbootstrap.dir/vkbootstrap/VkBootstrap.cpp.o	fc1e8894c2746772
+1	1297	1727721833839253936	third_party/CMakeFiles/tinyobjloader.dir/tinyobjloader/tiny_obj_loader.cc.o	eb3bd91cb44992f7
+17	280	1727722495229807576	src/CMakeFiles/vulkan_guide.dir/vk_initializers.cpp.o	b8d270b1fd4f95aa
+16	5396	1727722495228993651	third_party/libtinyobjloader.a	594acaf72b81cafc
+10	383	1727758528832498677	src/CMakeFiles/vulkan_guide.dir/main.cpp.o	c88e1adfbc0bdad9
+384	440	1727758529206347082	src/CMakeFiles/vulkan_guide.dir/vk_initializers.cpp.o	5834958994ee0ac
+9	446	1727758528831848300	third_party/CMakeFiles/imgui.dir/imgui/imgui_impl_vulkan.cpp.o	bd3c1c4dd8ffb6f0
+10	531	1727758528832680511	src/CMakeFiles/vulkan_guide.dir/vk_engine.cpp.o	a80370c76240b753
+9	541	1727758528832001051	third_party/CMakeFiles/imgui.dir/imgui/imgui_impl_sdl.cpp.o	d61a4b9a7d869752
+9	560	1727758528831209508	third_party/CMakeFiles/imgui.dir/imgui/imgui_demo.cpp.o	7f3cca5c617b36ce
+9	634	1727758528831379924	third_party/CMakeFiles/imgui.dir/imgui/imgui_draw.cpp.o	f2b2f4018f0dbfcb
+9	732	1727758528831659217	third_party/CMakeFiles/imgui.dir/imgui/imgui_widgets.cpp.o	31c46aa752755d3
+8	734	1727758528830685798	third_party/CMakeFiles/imgui.dir/imgui/imgui.cpp.o	e04e2d701ce43b89
+734	856	1727758529556987646	third_party/libimgui.a	8aa678931e2cca77
+856	2610	1727758529678210983	/Users/yfan/MyProjects/Cpp/vulkan-guide-learning/bin/vulkan_guide	8b169956c5e8ef6a
