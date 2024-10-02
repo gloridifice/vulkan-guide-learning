@@ -634,7 +634,7 @@ detail::Result<Instance> InstanceBuilder::build () const {
         added_window_exts = check_add_window_ext ("VK_KHR_xlib_surface") || added_window_exts;
         added_window_exts = check_add_window_ext ("VK_KHR_wayland_surface") || added_window_exts;
 #elif defined(__APPLE__)
-		bool added_window_exts = check_add_window_ext ("VK_KHR_metal_surface");
+		bool added_window_exts = check_add_window_ext ("VK_EXT_metal_surface");
 #endif
 		if (!khr_surface_added || !added_window_exts)
 			return make_error_code (InstanceError::windowing_extensions_not_present);
@@ -695,6 +695,7 @@ detail::Result<Instance> InstanceBuilder::build () const {
 	instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	detail::setup_pNext_chain (instance_create_info, pNext_chain);
 	instance_create_info.flags = info.flags;
+    instance_create_info.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 	instance_create_info.pApplicationInfo = &app_info;
 	instance_create_info.enabledExtensionCount = static_cast<uint32_t> (extensions.size ());
 	instance_create_info.ppEnabledExtensionNames = extensions.data ();
