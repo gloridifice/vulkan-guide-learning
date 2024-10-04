@@ -17,12 +17,25 @@ public:
     VkDevice _device;
     VkSurfaceKHR _surface;
 
+    VkQueue _graphicsQueue;
+    uint32_t _graphicsQueueFamily;
+
+    VkCommandPool  _commandPool;
+    VkCommandBuffer  _mainCommandBuffer;
+
+    VkRenderPass _renderPass;
+
+    VkSemaphore _presentSemaphore, _renderSemaphore;
+    VkFence _renderFence;
+
     VkSwapchainKHR _swapchain;
     VkFormat _swapchainImageFormat;
     std::vector<VkImage> _swapchainImages;
     std::vector<VkImageView> _swapchainImageViews;
 
 	VkExtent2D _windowExtent{ 1700 , 900 };
+
+    std::vector<VkFramebuffer> _framebuffers;
 
 	struct SDL_Window* _window{ nullptr };
 
@@ -45,6 +58,10 @@ private:
     void init_swapchain();
 
     void init_commands();
+
+    void init_default_renderpass();
+
+    void init_framebuffers();
 
     void init_sync_structures();
 };
