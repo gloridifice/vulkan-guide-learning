@@ -54,6 +54,7 @@ void VulkanEngine::init() {
 
 void VulkanEngine::cleanup() {
     if (_isInitialized) {
+        vkDeviceWaitIdle(_device);
         vkWaitForFences(_device, 1, &_renderFence, true, 1000000000);
 
         _mainDeletionQueue.flush();
