@@ -7,6 +7,9 @@
 #include "vector"
 #include "deque"
 #include "functional"
+#include "vk_mem_alloc.h"
+#include "vk_mesh.h"
+#include "glm/glm.hpp"
 
 struct DeletionQueue {
     std::deque<std::function<void()>> deletors;
@@ -23,12 +26,18 @@ struct DeletionQueue {
     }
 };
 
+struct MeshPushConstants{
+    glm::vec4 data;
+    glm::mat4 render_matrix;
+};
+
 class VulkanEngine {
 public:
     bool _isInitialized{false};
     int _frameNumber{0};
 
     DeletionQueue _mainDeletionQueue;
+    VmaAllocator _allocator;
 
     VkInstance _instance;
     VkDebugUtilsMessengerEXT _debug_messenger;
@@ -45,6 +54,10 @@ public:
     VkRenderPass _renderPass;
     VkPipelineLayout _trianglePipelineLayout;
     VkPipeline _trianglePipeline;
+
+    VkPipeline _meshPipeline;
+    VkPipelineLayout _meshPipelineLayout;
+    Mesh _triangleMesh;
 
     VkSemaphore _presentSemaphore, _renderSemaphore;
     VkFence _renderFence;
@@ -89,6 +102,10 @@ private:
     void init_pipelines();
 
     bool load_shader_module(const char *filePath, VkShaderModule *outShaderModule);
+
+    void load_meshes();
+
+    void upload_mesh(Mesh& mesh);
 };
 
 class PipelineBuilder {
