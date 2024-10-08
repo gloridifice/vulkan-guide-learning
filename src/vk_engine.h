@@ -43,10 +43,22 @@ struct RenderObject {
     glm::mat4 transformMatrix;
 };
 
+struct FrameData{
+   VkSemaphore _presentSemaphore, _renderSemaphore;
+   VkFence _renderFence;
+
+   VkCommandPool _commandPool;
+   VkCommandBuffer _mainCommandBuffer;
+};
+
+constexpr unsigned int FRAME_OVERLAP = 2;
+
 class VulkanEngine {
 public:
     bool _isInitialized{false};
     int _frameNumber{0};
+
+    FrameData _frames[FRAME_OVERLAP];
 
     DeletionQueue _mainDeletionQueue;
     VmaAllocator _allocator;
@@ -64,9 +76,6 @@ public:
     VkQueue _graphicsQueue;
     uint32_t _graphicsQueueFamily;
 
-    VkCommandPool _commandPool;
-    VkCommandBuffer _mainCommandBuffer;
-
     VkRenderPass _renderPass;
     VkPipelineLayout _trianglePipelineLayout;
     VkPipeline _trianglePipeline;
@@ -81,9 +90,6 @@ public:
     AllocatedImage _depthImage;
     VkFormat _depthFormat;
     //End Depth Image
-
-    VkSemaphore _presentSemaphore, _renderSemaphore;
-    VkFence _renderFence;
 
     VkSwapchainKHR _swapchain;
     VkFormat _swapchainImageFormat;
@@ -110,11 +116,13 @@ public:
 
     Material *create_material(VkPipeline pipeline, VkPipelineLayout layout, const std::string &name);
 
-    Material* get_material(const std::string &name);
+    Material *get_material(const std::string &name);
 
-    Mesh* get_mesh(const std::string &name);
+    Mesh *get_mesh(const std::string &name);
 
-    void draw_objects(VkCommandBuffer cmd, RenderObject* first, int count);
+    void draw_objects(VkCommandBuffer cmd, RenderObject *first, int count);
+
+    FrameData &get_current_frame();
 
 private:
 

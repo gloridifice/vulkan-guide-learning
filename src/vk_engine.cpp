@@ -62,7 +62,7 @@ void VulkanEngine::init() {
 void VulkanEngine::cleanup() {
     if (_isInitialized) {
         vkDeviceWaitIdle(_device);
-        vkWaitForFences(_device, 1, &_renderFence, true, 1000000000);
+        vkWaitForFences(_device, 1, &get_current_frame()._renderFence, true, 1000000000);
 
         _mainDeletionQueue.flush();
 
@@ -77,15 +77,15 @@ void VulkanEngine::cleanup() {
 }
 
 void VulkanEngine::draw() {
-    VK_CHECK(vkWaitForFences(_device, 1, &_renderFence, true, 1000000000));
-    VK_CHECK(vkResetFences(_device, 1, &_renderFence));
+    VK_CHECK(vkWaitForFences(_device, 1, &get_current_frame()._renderFence, true, 1000000000));
+    VK_CHECK(vkResetFences(_device, 1, &get_current_frame()._renderFence));
 
     uint32_t swapchainImageIndex;
-    VK_CHECK(vkAcquireNextImageKHR(_device, _swapchain, 1000000000, _presentSemaphore, nullptr, &swapchainImageIndex))
-    VK_CHECK(vkResetCommandBuffer(_mainCommandBuffer, 0))
+    VK_CHECK(vkAcquireNextImageKHR(_device, _swapchain, 1000000000, get_current_frame()._presentSemaphore, nullptr, &swapchainImageIndex))
+    VK_CHECK(vkResetCommandBuffer(get_current_frame()._mainCommandBuffer, 0))
 
     //naming it cmd for shorter writing
-    VkCommandBuffer cmd = _mainCommandBuffer;
+    VkCommandBuffer cmd = get_current_frame()._mainCommandBuffer;
 
     //begin the command buffer recording. We will use this command buffer exactly once, so we want to let Vulkan know that
     VkCommandBufferBeginInfo cmdBeginInfo = vkinit::command_buffer_begin_info(
@@ -127,15 +127,15 @@ void VulkanEngine::draw() {
     submit.pWaitDstStageMask = &waitStage;
 
     submit.waitSemaphoreCount = 1;
-    submit.pWaitSemaphores = &_presentSemaphore;
+    submit.pWaitSemaphores = &get_current_frame()._presentSemaphore;
 
     submit.signalSemaphoreCount = 1;
-    submit.pSignalSemaphores = &_renderSemaphore;
+    submit.pSignalSemaphores = &get_current_frame()._renderSemaphore;
 
     submit.commandBufferCount = 1;
     submit.pCommandBuffers = &cmd;
 
-    VK_CHECK(vkQueueSubmit(_graphicsQueue, 1, &submit, _renderFence));
+    VK_CHECK(vkQueueSubmit(_graphicsQueue, 1, &submit, get_current_frame()._renderFence));
 
     VkPresentInfoKHR presentInfo = {};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -144,7 +144,7 @@ void VulkanEngine::draw() {
     presentInfo.pSwapchains = &_swapchain;
     presentInfo.swapchainCount = 1;
 
-    presentInfo.pWaitSemaphores = &_renderSemaphore;
+    presentInfo.pWaitSemaphores = &get_current_frame()._renderSemaphore;
     presentInfo.waitSemaphoreCount = 1;
 
     presentInfo.pImageIndices = &swapchainImageIndex;
@@ -264,35 +264,42 @@ void VulkanEngine::init_commands() {
     //create a command pool for commands submitted to the graphics queue.
     VkCommandPoolCreateInfo commandPoolInfo = vkinit::command_pool_create_info(_graphicsQueueFamily,
                                                                                VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+    for (int i = 0; i < FRAME_OVERLAP; ++i) {
+        auto& frame = _frames[i];
+        VK_CHECK(vkCreateCommandPool(_device, &commandPoolInfo, nullptr, &frame._commandPool));
 
-    VK_CHECK(vkCreateCommandPool(_device, &commandPoolInfo, nullptr, &_commandPool));
+        //allocate the default command buffer that we will use for rendering
+        VkCommandBufferAllocateInfo cmdAllocInfo = vkinit::command_buffer_allocate_info(frame._commandPool, 1);
 
-    //allocate the default command buffer that we will use for rendering
-    VkCommandBufferAllocateInfo cmdAllocInfo = vkinit::command_buffer_allocate_info(_commandPool, 1);
+        VK_CHECK(vkAllocateCommandBuffers(_device, &cmdAllocInfo, &frame._mainCommandBuffer));
 
-    VK_CHECK(vkAllocateCommandBuffers(_device, &cmdAllocInfo, &_mainCommandBuffer));
+        _mainDeletionQueue.push_function([=]() {
+            vkDestroyCommandPool(_device, frame._commandPool, nullptr);
+        });
+    }
 
-    _mainDeletionQueue.push_function([=]() {
-        vkDestroyCommandPool(_device, _commandPool, nullptr);
-    });
 }
 
 void VulkanEngine::init_sync_structures() {
-    // Fence
     VkFenceCreateInfo fenceCreateInfo = vkinit::fence_create_info(VK_FENCE_CREATE_SIGNALED_BIT);
-    VK_CHECK(vkCreateFence(_device, &fenceCreateInfo, nullptr, &_renderFence));
-    _mainDeletionQueue.push_function([=]() {
-        vkDestroyFence(_device, _renderFence, nullptr);
-    });
-
-    // for the semaphores we don't need any flags
     VkSemaphoreCreateInfo semaphoreCreateInfo = vkinit::semaphore_create_info(0);
-    VK_CHECK(vkCreateSemaphore(_device, &semaphoreCreateInfo, nullptr, &_presentSemaphore));
-    VK_CHECK(vkCreateSemaphore(_device, &semaphoreCreateInfo, nullptr, &_renderSemaphore));
-    _mainDeletionQueue.push_function([=]() {
-        vkDestroySemaphore(_device, _presentSemaphore, nullptr);
-        vkDestroySemaphore(_device, _renderSemaphore, nullptr);
-    });
+
+    for (int i = 0; i < FRAME_OVERLAP; i++) {
+        auto& frame = _frames[i];
+
+        VK_CHECK(vkCreateFence(_device, &fenceCreateInfo, nullptr, &frame._renderFence));
+        _mainDeletionQueue.push_function([=]() {
+            vkDestroyFence(_device, frame._renderFence, nullptr);
+        });
+
+        VK_CHECK(vkCreateSemaphore(_device, &semaphoreCreateInfo, nullptr, &frame._presentSemaphore));
+        VK_CHECK(vkCreateSemaphore(_device, &semaphoreCreateInfo, nullptr, &frame._renderSemaphore));
+        _mainDeletionQueue.push_function([=]() {
+                                             vkDestroySemaphore(_device, frame._presentSemaphore, nullptr);
+                                             vkDestroySemaphore(_device, frame._renderSemaphore, nullptr);
+                                         }
+        );
+    }
 }
 
 void VulkanEngine::init_default_renderpass() {
@@ -706,4 +713,8 @@ void VulkanEngine::draw_objects(VkCommandBuffer cmd, RenderObject *first, int co
         }
         vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->_indices.size()), 1, 0, 0, 0);
     }
+}
+
+FrameData &VulkanEngine::get_current_frame() {
+    return _frames[_frameNumber % FRAME_OVERLAP];
 }
