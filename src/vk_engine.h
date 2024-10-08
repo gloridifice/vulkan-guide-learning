@@ -139,6 +139,10 @@ private:
     void load_meshes();
 
     void upload_mesh(Mesh &mesh);
+
+    void
+    create_buffer(VkDeviceSize size, void *pData, VkBufferUsageFlags usage, VkBuffer *pBuffer,
+                  VmaAllocation *pAllocation);
 };
 
 class PipelineBuilder {

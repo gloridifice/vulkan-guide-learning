@@ -44,5 +44,7 @@ namespace vkinit {
 
     VkPipelineDepthStencilStateCreateInfo
     depth_stencil_create_info(bool bDepthTest, bool bDepthWrite, VkCompareOp compareOp);
+
+    VkBufferCreateInfo buffer_create_info(VkDeviceSize size, VkBufferUsageFlags usage);
 }
 

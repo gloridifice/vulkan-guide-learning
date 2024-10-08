@@ -232,3 +232,11 @@ VkPipelineDepthStencilStateCreateInfo vkinit::depth_stencil_create_info(bool bDe
     return info;
 }
 
+VkBufferCreateInfo vkinit::buffer_create_info(VkDeviceSize size, VkBufferUsageFlags usage){
+    VkBufferCreateInfo info{};
+    info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    info.size = size;
+    info.usage = usage;
+    return info;
+}
+

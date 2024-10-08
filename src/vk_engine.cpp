@@ -1,5 +1,6 @@
 ﻿
 #define VMA_IMPLEMENTATION
+#define GLM_ENABLE_EXPERIMENTAL
 
 #include "vk_engine.h"
 
@@ -601,6 +602,8 @@ void VulkanEngine::load_meshes() {
     _triangleMesh._vertices[1].color = {0.f, 1.f, 0.0f}; //pure green
     _triangleMesh._vertices[2].color = {0.f, 1.f, 0.0f}; //pure green
 
+    _triangleMesh._indices = {0, 1, 2};
+
     _monkeyMesh.load_from_obj("../assets/monkey_smooth.obj");
 
     upload_mesh(_triangleMesh);
@@ -612,38 +615,42 @@ void VulkanEngine::load_meshes() {
 
 
 void VulkanEngine::upload_mesh(Mesh &mesh) {
-    //allocate vertex buffer
-    VkBufferCreateInfo bufferInfo = {};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    //this is the total size, in bytes, of the buffer we are allocating
-    bufferInfo.size = mesh._vertices.size() * sizeof(Vertex);
-    //this buffer is going to be used as a Vertex Buffer
-    bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+    create_buffer(mesh._vertices.size() * sizeof(Vertex),
+                  mesh._vertices.data(),
+                  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+                  &mesh._vertexBuffer._buffer,
+                  &mesh._vertexBuffer._allocation);
 
+    create_buffer(mesh._indices.size() * sizeof(uint32_t),
+                  mesh._indices.data(),
+                  VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+                  &mesh._indexBuffer._buffer,
+                  &mesh._indexBuffer._allocation);
+}
 
-    //let the VMA library know that this data should be writeable by CPU, but also readable by GPU
+void VulkanEngine::create_buffer(VkDeviceSize size, void *pData, VkBufferUsageFlags usage, VkBuffer *pBuffer,
+                                 VmaAllocation *pAllocation) {
+    VkBufferCreateInfo bufferInfo = vkinit::buffer_create_info(size, usage);
+
     VmaAllocationCreateInfo vmaAllocInfo = {};
     vmaAllocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
-    //allocate the buffer
     VK_CHECK(vmaCreateBuffer(_allocator, &bufferInfo, &vmaAllocInfo,
-                             &mesh._vertexBuffer._buffer,
-                             &mesh._vertexBuffer._allocation,
+                             pBuffer,
+                             pAllocation,
                              nullptr));
 
-    //add the destruction of triangle mesh buffer to the deletion queue
     _mainDeletionQueue.push_function([=]() {
-
-        vmaDestroyBuffer(_allocator, mesh._vertexBuffer._buffer, mesh._vertexBuffer._allocation);
+        vmaDestroyBuffer(_allocator, *pBuffer, *pAllocation);
     });
 
     void *data;
-    vmaMapMemory(_allocator, mesh._vertexBuffer._allocation, &data);
-
-    memcpy(data, mesh._vertices.data(), mesh._vertices.size() * sizeof(Vertex));
-
-    vmaUnmapMemory(_allocator, mesh._vertexBuffer._allocation);
-
+    // 将映射到 GPU 内存映射到 CPU 地址空间
+    vmaMapMemory(_allocator, *pAllocation, &data);
+    // 将数据拷贝到映射了的 GPU 内存里
+    memcpy(data, pData, size);
+    // 取消映射
+    vmaUnmapMemory(_allocator, *pAllocation);
 }
 
 Material *VulkanEngine::create_material(VkPipeline pipeline, VkPipelineLayout layout, const std::string &name) {
@@ -694,8 +701,9 @@ void VulkanEngine::draw_objects(VkCommandBuffer cmd, RenderObject *first, int co
         if (object.mesh != lastMesh) {
             VkDeviceSize offset = 0;
             vkCmdBindVertexBuffers(cmd, 0, 1, &object.mesh->_vertexBuffer._buffer, &offset);
+            vkCmdBindIndexBuffer(cmd, object.mesh->_indexBuffer._buffer, 0, VK_INDEX_TYPE_UINT32);
             lastMesh = object.mesh;
         }
-        vkCmdDraw(cmd, object.mesh->_vertices.size(), 1, 0, 0);
+        vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->_indices.size()), 1, 0, 0, 0);
     }
 }
