@@ -43,12 +43,21 @@ struct RenderObject {
     glm::mat4 transformMatrix;
 };
 
+struct GPUCameraData{
+    glm::mat4 view;
+    glm::mat4 proj;
+    glm::mat4 viewProj;
+};
+
 struct FrameData{
    VkSemaphore _presentSemaphore, _renderSemaphore;
    VkFence _renderFence;
 
    VkCommandPool _commandPool;
    VkCommandBuffer _mainCommandBuffer;
+
+   AllocatedBuffer _cameraBuffer;
+   VkDescriptorSet _globalDescriptor;
 };
 
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -57,6 +66,9 @@ class VulkanEngine {
 public:
     bool _isInitialized{false};
     int _frameNumber{0};
+
+    VkDescriptorSetLayout _globalSetLayout;
+    VkDescriptorPool _descriptorPool;
 
     FrameData _frames[FRAME_OVERLAP];
 
@@ -69,6 +81,8 @@ public:
     VkDevice _device;
     VkSurfaceKHR _surface;
 
+    VkPhysicalDeviceProperties _gpuProperties;
+
     std::vector<RenderObject> _renderables;
     std::unordered_map<std::string, Material> _materials;
     std::unordered_map<std::string, Mesh> _meshes;
@@ -77,13 +91,6 @@ public:
     uint32_t _graphicsQueueFamily;
 
     VkRenderPass _renderPass;
-    VkPipelineLayout _trianglePipelineLayout;
-    VkPipeline _trianglePipeline;
-
-    VkPipeline _meshPipeline;
-    VkPipelineLayout _meshPipelineLayout;
-    Mesh _triangleMesh;
-    Mesh _monkeyMesh;
 
     // Depth Image
     VkImageView _depthImageView;
@@ -142,15 +149,17 @@ private:
 
     void init_scene();
 
+    void init_descriptors();
+
     bool load_shader_module(const char *filePath, VkShaderModule *outShaderModule);
 
     void load_meshes();
 
     void upload_mesh(Mesh &mesh);
 
-    void
-    create_buffer(VkDeviceSize size, void *pData, VkBufferUsageFlags usage, VkBuffer *pBuffer,
-                  VmaAllocation *pAllocation);
+    AllocatedBuffer create_buffer(size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage) const;
+
+    void write_buffer(void *pData, VkDeviceSize size, VmaAllocation allocation);
 };
 
 class PipelineBuilder {

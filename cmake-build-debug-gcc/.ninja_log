@@ -1,0 +1,4 @@
+# ninja log v6
+1	82	1728482658768111529	/Users/yfan/MyProjects/Cpp/vulkan-guide-learning/shaders/tri_mesh.vert.spv	839fed964c9e5ed7
+1	83	1728482658768115529	/Users/yfan/MyProjects/Cpp/vulkan-guide-learning/shaders/triangle.frag.spv	51b3e12b30986ad1
+2	83	1728482658768137904	/Users/yfan/MyProjects/Cpp/vulkan-guide-learning/shaders/triangle.vert.spv	7948b2f29a459bd8
