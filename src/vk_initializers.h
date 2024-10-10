@@ -46,5 +46,12 @@ namespace vkinit {
     depth_stencil_create_info(bool bDepthTest, bool bDepthWrite, VkCompareOp compareOp);
 
     VkBufferCreateInfo buffer_create_info(VkDeviceSize size, VkBufferUsageFlags usage);
+
+    VkDescriptorSetLayoutBinding
+    descriptor_set_layout_binding(VkDescriptorType type, VkShaderStageFlags stageFlags, uint32_t binding);
+
+    VkWriteDescriptorSet
+    write_descriptor_buffer(VkDescriptorType type, VkDescriptorSet dstSet, VkDescriptorBufferInfo *bufferInfo,
+                            uint32_t binding);
 }
 

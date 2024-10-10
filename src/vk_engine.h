@@ -49,6 +49,14 @@ struct GPUCameraData{
     glm::mat4 viewProj;
 };
 
+struct GPUSceneData{
+    glm::vec4 fogColor;
+    glm::vec4 fogDistances;
+    glm::vec4 ambientColor;
+    glm::vec4 sunlightDirection;
+    glm::vec4 sunlightColor;
+};
+
 struct FrameData{
    VkSemaphore _presentSemaphore, _renderSemaphore;
    VkFence _renderFence;
@@ -66,6 +74,9 @@ class VulkanEngine {
 public:
     bool _isInitialized{false};
     int _frameNumber{0};
+
+    GPUSceneData _sceneParameters;
+    AllocatedBuffer _sceneParameterBuffer;
 
     VkDescriptorSetLayout _globalSetLayout;
     VkDescriptorPool _descriptorPool;
@@ -159,7 +170,11 @@ private:
 
     AllocatedBuffer create_buffer(size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage) const;
 
-    void write_buffer(void *pData, VkDeviceSize size, VmaAllocation allocation);
+    void write_buffer(void *pData, VkDeviceSize size, VmaAllocation allocation, size_t offset = 0);
+
+    size_t pad_uniform_buffer_size(size_t originalSize);
+
+    VkShaderModule new_shader_module_from_loading(const std::string& filePath);
 };
 
 class PipelineBuilder {
