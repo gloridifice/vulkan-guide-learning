@@ -58,14 +58,21 @@ struct GPUSceneData{
 };
 
 struct FrameData{
-   VkSemaphore _presentSemaphore, _renderSemaphore;
-   VkFence _renderFence;
+   VkSemaphore presentSemaphore, renderSemaphore;
+   VkFence renderFence;
 
-   VkCommandPool _commandPool;
-   VkCommandBuffer _mainCommandBuffer;
+   VkCommandPool commandPool;
+   VkCommandBuffer mainCommandBuffer;
 
-   AllocatedBuffer _cameraBuffer;
-   VkDescriptorSet _globalDescriptor;
+   AllocatedBuffer cameraBuffer;
+   VkDescriptorSet globalDescriptor;
+
+   AllocatedBuffer objectBuffer;
+   VkDescriptorSet objectDescriptor;
+};
+
+struct GPUObjectData{
+    glm::mat4 modelMatrix;
 };
 
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -79,6 +86,7 @@ public:
     AllocatedBuffer _sceneParameterBuffer;
 
     VkDescriptorSetLayout _globalSetLayout;
+    VkDescriptorSetLayout _objectSetLayout;
     VkDescriptorPool _descriptorPool;
 
     FrameData _frames[FRAME_OVERLAP];

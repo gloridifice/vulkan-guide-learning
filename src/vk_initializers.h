@@ -53,5 +53,8 @@ namespace vkinit {
     VkWriteDescriptorSet
     write_descriptor_buffer(VkDescriptorType type, VkDescriptorSet dstSet, VkDescriptorBufferInfo *bufferInfo,
                             uint32_t binding);
+
+    VkDescriptorSetAllocateInfo
+    descriptor_alloc_info(VkDescriptorPool pool, uint32_t setCount, VkDescriptorSetLayout const *pSetLayout);
 }
 

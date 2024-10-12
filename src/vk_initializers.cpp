@@ -266,3 +266,14 @@ VkWriteDescriptorSet vkinit::write_descriptor_buffer(VkDescriptorType type, VkDe
 
     return write;
 }
+
+VkDescriptorSetAllocateInfo vkinit::descriptor_alloc_info(VkDescriptorPool pool, uint32_t setCount, const VkDescriptorSetLayout* pSetLayout){
+    VkDescriptorSetAllocateInfo allocInfo {};
+    allocInfo.pNext = nullptr;
+    allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    allocInfo.descriptorPool = pool;
+    allocInfo.descriptorSetCount = setCount;
+    allocInfo.pSetLayouts = pSetLayout;
+
+    return allocInfo;
+}
