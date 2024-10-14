@@ -11,6 +11,7 @@
 #include "vk_mesh.h"
 #include "glm/glm.hpp"
 #include "unordered_map"
+#include "imgui_impl_sdl.h"
 
 struct DeletionQueue {
     std::deque<std::function<void()>> deletors;
@@ -33,8 +34,14 @@ struct MeshPushConstants {
 };
 
 struct Material {
+    VkDescriptorSet textureSet{VK_NULL_HANDLE};
     VkPipeline pipeline;
     VkPipelineLayout pipelineLayout;
+};
+
+struct Texture {
+    AllocatedImage image;
+    VkImageView imageView;
 };
 
 struct RenderObject {
@@ -43,13 +50,13 @@ struct RenderObject {
     glm::mat4 transformMatrix;
 };
 
-struct GPUCameraData{
+struct GPUCameraData {
     glm::mat4 view;
     glm::mat4 proj;
     glm::mat4 viewProj;
 };
 
-struct GPUSceneData{
+struct GPUSceneData {
     glm::vec4 fogColor;
     glm::vec4 fogDistances;
     glm::vec4 ambientColor;
@@ -57,22 +64,41 @@ struct GPUSceneData{
     glm::vec4 sunlightColor;
 };
 
-struct FrameData{
-   VkSemaphore presentSemaphore, renderSemaphore;
-   VkFence renderFence;
+struct FrameData {
+    VkSemaphore presentSemaphore, renderSemaphore;
+    VkFence renderFence;
 
-   VkCommandPool commandPool;
-   VkCommandBuffer mainCommandBuffer;
+    VkCommandPool commandPool;
+    VkCommandBuffer mainCommandBuffer;
 
-   AllocatedBuffer cameraBuffer;
-   VkDescriptorSet globalDescriptor;
+    AllocatedBuffer cameraBuffer;
+    VkDescriptorSet globalDescriptor;
 
-   AllocatedBuffer objectBuffer;
-   VkDescriptorSet objectDescriptor;
+    AllocatedBuffer objectBuffer;
+    VkDescriptorSet objectDescriptor;
 };
 
-struct GPUObjectData{
+struct GPUObjectData {
     glm::mat4 modelMatrix;
+};
+
+struct UploadContext {
+    VkFence uploadFence;
+    VkCommandPool commandPool;
+    VkCommandBuffer commandBuffer;
+};
+
+class Camera {
+public:
+    glm::vec3 position = glm::vec3();
+    float pitch = 90.f;
+    float yaw = 0.f;
+    float fovy = glm::radians(70.f);
+    float aspect = 1700.f / 900.f;
+    float zNear = 0.1f;
+    float zFar = 200.f;
+
+    GPUCameraData gpu_data();
 };
 
 constexpr unsigned int FRAME_OVERLAP = 2;
@@ -81,6 +107,11 @@ class VulkanEngine {
 public:
     bool _isInitialized{false};
     int _frameNumber{0};
+
+    Camera* _camera = new Camera();
+
+    VkDescriptorSetLayout _singleTextureSetLayout;
+    UploadContext _uploadContext;
 
     GPUSceneData _sceneParameters;
     AllocatedBuffer _sceneParameterBuffer;
@@ -105,6 +136,7 @@ public:
     std::vector<RenderObject> _renderables;
     std::unordered_map<std::string, Material> _materials;
     std::unordered_map<std::string, Mesh> _meshes;
+    std::unordered_map<std::string, Texture> _loadedTextures;
 
     VkQueue _graphicsQueue;
     uint32_t _graphicsQueueFamily;
@@ -150,6 +182,10 @@ public:
 
     FrameData &get_current_frame();
 
+    void immediate_submit(std::function<void(VkCommandBuffer cmd)> &&function);
+
+    AllocatedBuffer create_buffer(size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage) const;
+
 private:
 
     void init_vulkan();
@@ -174,15 +210,22 @@ private:
 
     void load_meshes();
 
-    void upload_mesh(Mesh &mesh);
+    void load_images();
 
-    AllocatedBuffer create_buffer(size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage) const;
+    void upload_mesh(Mesh &mesh);
 
     void write_buffer(void *pData, VkDeviceSize size, VmaAllocation allocation, size_t offset = 0);
 
     size_t pad_uniform_buffer_size(size_t originalSize);
 
-    VkShaderModule new_shader_module_from_loading(const std::string& filePath);
+    VkShaderModule new_shader_module_from_loading(const std::string &filePath);
+
+    void copy_buffer_cpu2gpu(size_t bufferSize, void *pData, VkBuffer dstBuffer, VkDeviceSize dstOffset = 0,
+                             VkDeviceSize srcOffset = 0);
+
+    void handle_input(SDL_Event &e);
+
+    void update();
 };
 
 class PipelineBuilder {

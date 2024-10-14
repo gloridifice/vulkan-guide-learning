@@ -56,5 +56,13 @@ namespace vkinit {
 
     VkDescriptorSetAllocateInfo
     descriptor_alloc_info(VkDescriptorPool pool, uint32_t setCount, VkDescriptorSetLayout const *pSetLayout);
+
+    VkSubmitInfo submit_info(VkCommandBuffer *cmd);
+
+    VkWriteDescriptorSet
+    write_descriptor_image(VkDescriptorType type, VkDescriptorSet dstSet, VkDescriptorImageInfo *imageInfo,
+                           uint32_t binding);
+
+    VkSamplerCreateInfo sampler_create_info(VkFilter filters, VkSamplerAddressMode samplerAddressMode);
 }
 

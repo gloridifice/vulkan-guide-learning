@@ -9,6 +9,7 @@
 VertexInputDescription Vertex::get_vertex_description() {
     VertexInputDescription description;
 
+    // TODO vk_initializers
     //we will have just 1 vertex buffer binding, with a per-vertex rate
     VkVertexInputBindingDescription mainBinding = {};
     mainBinding.binding = 0;
@@ -38,9 +39,17 @@ VertexInputDescription Vertex::get_vertex_description() {
     colorAttribute.format = VK_FORMAT_R32G32B32_SFLOAT;
     colorAttribute.offset = offsetof(Vertex, color);
 
+    VkVertexInputAttributeDescription uvAttribute {};
+    uvAttribute.binding = 0;
+    uvAttribute.location = 3;
+    uvAttribute.format = VK_FORMAT_R32G32_SFLOAT;
+    uvAttribute.offset = offsetof(Vertex, uv);
+
+
     description.attributes.push_back(positionAttribute);
     description.attributes.push_back(normalAttribute);
     description.attributes.push_back(colorAttribute);
+    description.attributes.push_back(uvAttribute);
     return description;
 }
 
@@ -79,7 +88,12 @@ bool Mesh::load_from_obj(const char *filename) {
                     attrib.normals[3 * index.normal_index + 2],
             };
 
-            new_vert.color = new_vert.normal;
+//            new_vert.color = new_vert.normal;
+
+            new_vert.uv = {
+                    attrib.texcoords[2 * index.texcoord_index + 0],
+                    1 - attrib.texcoords[2 * index.texcoord_index + 1],
+            };
 
             if (uniqueVertices.count(new_vert) == 0) {
                 uniqueVertices[new_vert] = static_cast<uint32_t>(_vertices.size());

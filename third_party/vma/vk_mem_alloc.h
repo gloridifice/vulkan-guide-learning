@@ -843,7 +843,7 @@ What it doesn't do, so you need to do it yourself:
   for that purpose and NOT vmaDestroyBuffer(),
   vmaDestroyImage(), vmaCreateBuffer(), vmaCreateImage(), because you don't need to
   destroy or create allocation objects!
-- Recreate views and update descriptors that point to these buffers and images.
+- Recreate views and handle_sdl_event descriptors that point to these buffers and images.
 
 \section defragmentation_cpu Defragmenting CPU memory
 
@@ -1140,7 +1140,7 @@ cannot become lost.
 <b>Q: Can I touch allocation that cannot become lost?</b>
 
 Yes, although it has no visible effect.
-Calls to vmaGetAllocationInfo() and vmaTouchAllocation() update last use frame index
+Calls to vmaGetAllocationInfo() and vmaTouchAllocation() handle_sdl_event last use frame index
 also for allocations that cannot become lost, but the only way to observe it is to dump
 internal allocator state using vmaBuildStatsString().
 You can use this feature for debugging purposes to explicitly mark allocations that you use
@@ -9270,7 +9270,7 @@ void VmaBlockMetadata_Generic::Alloc(
     VMA_ASSERT(suballoc.size >= paddingBegin + allocSize);
     const VkDeviceSize paddingEnd = suballoc.size - paddingBegin - allocSize;
 
-    // Unregister this free suballocation from m_FreeSuballocationsBySize and update
+    // Unregister this free suballocation from m_FreeSuballocationsBySize and handle_sdl_event
     // it to become used.
     UnregisterFreeSuballocation(request.item);
 
